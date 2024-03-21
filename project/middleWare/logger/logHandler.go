@@ -7,17 +7,32 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
+	"gopkg.in/yaml.v3"
 )
 
-type LogOut struct {
+type LogConfig struct {
 	// logger   *logrus.Logger
-	fileName string
+	Path            string `yaml:"path"`
+	TimestampFormat string `yaml:"timestampFormat"`
 	// osFile   *os.File
 }
 
 var logger = logrus.New()
 
-var dayLog LogOut
+var logConfig LogConfig
+
+func init() {
+	configFile := "../config/log.yaml"
+	dataBytes, err := os.ReadFile(configFile)
+	if err != nil {
+		fmt.Println("log config init ReadFile err: ", err)
+	}
+	err = yaml.Unmarshal(dataBytes, &logConfig)
+	if err != nil {
+		fmt.Println("log config init Unmarshal err: ", err)
+	}
+	StructLog("Info", "log 配置成功！")
+}
 
 func CreateLogFolder(path string) {
 	if err := os.MkdirAll(path, 0777); err != nil {
@@ -28,8 +43,8 @@ func CreateLogFolder(path string) {
 
 func StructLog(logLevel, format string, args ...interface{}) {
 	tim := time.Now().Format("2006-01-02")
-	dayLog.fileName = tim + ".log"
-	f, err := os.OpenFile("../logs/"+dayLog.fileName, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0777)
+	fileName := tim + ".log"
+	f, err := os.OpenFile(logConfig.Path+"/"+fileName, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0777)
 	if err != nil {
 		panic(err)
 	}
@@ -37,8 +52,8 @@ func StructLog(logLevel, format string, args ...interface{}) {
 	logger.Out = f
 	logger.SetFormatter(&logrus.TextFormatter{
 		// ForceColors:               true,
-		EnvironmentOverrideColors: true,
-		TimestampFormat:           "2006-01-02 15:04:05",
+		// EnvironmentOverrideColors: true,
+		TimestampFormat: logConfig.TimestampFormat,
 	})
 	switch logLevel {
 	case "Info":

@@ -27,6 +27,7 @@ require (
 	golang.org/x/text v0.3.6 // indirect
 	google.golang.org/protobuf v1.28.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
+	gopkg.in/yaml.v3 v3.0.1
 	gorm.io/driver/mysql v1.3.4 // indirect
 	gorm.io/gorm v1.23.7 // indirect
 )
