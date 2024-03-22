@@ -27,7 +27,7 @@ type Redis struct {
 }
 
 func init() {
-	dataBytes, err := os.ReadFile("../config/DB.yaml")
+	dataBytes, err := os.ReadFile("../database/config/DB.yaml")
 	if err != nil {
 		logger.StructLog("Error", "db config init ReadFile err: %v", err)
 	}

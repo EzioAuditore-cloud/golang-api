@@ -22,7 +22,7 @@ var logger = logrus.New()
 var logConfig LogConfig
 
 func init() {
-	configFile := "../config/log.yaml"
+	configFile := "../middleWare/logger/config/log.yaml"
 	dataBytes, err := os.ReadFile(configFile)
 	if err != nil {
 		fmt.Println("log config init ReadFile err: ", err)
