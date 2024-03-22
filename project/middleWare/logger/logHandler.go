@@ -25,11 +25,11 @@ func init() {
 	configFile := "../middleWare/logger/config/log.yaml"
 	dataBytes, err := os.ReadFile(configFile)
 	if err != nil {
-		fmt.Println("log config init ReadFile err: ", err)
+		fmt.Errorf("log config init ReadFile err: ", err)
 	}
 	err = yaml.Unmarshal(dataBytes, &logConfig)
 	if err != nil {
-		fmt.Println("log config init Unmarshal err: ", err)
+		fmt.Errorf("log config init Unmarshal err: %v", err)
 	}
 	StructLog("Info", "log 配置成功！")
 }
