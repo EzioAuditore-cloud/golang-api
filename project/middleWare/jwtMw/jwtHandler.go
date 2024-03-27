@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"os"
 	"project/middleWare/logger"
+	general "project/model/General.go"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
@@ -15,8 +16,7 @@ type JwtConfig struct {
 }
 
 type JwtClaims struct {
-	ID       int
-	UserName string
+	User general.UserClient
 	jwt.StandardClaims
 }
 
@@ -62,8 +62,7 @@ func JwtAuthHandler() gin.HandlerFunc {
 
 		if claims, ok := token.Claims.(*JwtClaims); ok && token.Valid {
 			ctx.Set("token", token)
-			ctx.Set("id", claims.ID)
-			ctx.Set("user_name", claims.UserName)
+			ctx.Set("user", claims.User)
 			ctx.Next()
 		} else {
 			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"tokenValid Error": "Unauthorized"})

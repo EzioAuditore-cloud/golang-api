@@ -2,6 +2,7 @@ package logger
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"time"
 
@@ -25,7 +26,7 @@ func init() {
 	configFile := "../middleWare/logger/config/log.yaml"
 	dataBytes, err := os.ReadFile(configFile)
 	if err != nil {
-		fmt.Errorf("log config init ReadFile err: ", err)
+		fmt.Errorf("log config init ReadFile err: %v", err)
 	}
 	err = yaml.Unmarshal(dataBytes, &logConfig)
 	if err != nil {
@@ -49,12 +50,14 @@ func StructLog(logLevel, format string, args ...interface{}) {
 		panic(err)
 	}
 	defer f.Close()
-	logger.Out = f
 	logger.SetFormatter(&logrus.TextFormatter{
 		// ForceColors:               true,
 		// EnvironmentOverrideColors: true,
 		TimestampFormat: logConfig.TimestampFormat,
 	})
+	writers := []io.Writer{f, os.Stdout}
+	outs := io.MultiWriter(writers...)
+	logger.SetOutput(outs)
 	switch logLevel {
 	case "Info":
 		logger.SetLevel(logrus.InfoLevel)
