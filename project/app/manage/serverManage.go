@@ -60,21 +60,5 @@ func (srv *Server) Handler(conn *websocket.Conn, user general.UserClient) {
 	}
 	srv.BroadCast(client, []byte(client.Name+"已上线"))
 	go client.ListenSend()
-	// isAlive := make(chan bool)
-	// ctx, cancel := context.WithCancel(context.Background())
-	// wg := &sync.WaitGroup{}
-	// wg.Add(1)
 	go client.DoMessage()
-	// for {
-	// 	select {
-	// 	case <-isAlive:
-	// 		fmt.Println("Alive")
-	// 	case <-time.After(time.Second * 5):
-	// 		fmt.Println("Conn Time Out")
-	// 		cancel()
-	// 		wg.Wait()
-	// 		// time.Sleep(time.Millisecond * 100)
-	// 		return
-	// 	}
-	// }
 }
