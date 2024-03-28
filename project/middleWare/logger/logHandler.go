@@ -3,6 +3,7 @@ package logger
 import (
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"time"
 
@@ -47,9 +48,16 @@ func StructLog(logLevel, format string, args ...interface{}) {
 	fileName := tim + ".log"
 	f, err := os.OpenFile(logConfig.Path+"/"+fileName, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0777)
 	if err != nil {
+		log.Println("OpenFile Err")
 		panic(err)
 	}
-	defer f.Close()
+	defer func() {
+		p := recover()
+		if p != nil {
+			log.Println(p)
+		}
+		f.Close()
+	}()
 	logger.SetFormatter(&logrus.TextFormatter{
 		// ForceColors:               true,
 		// EnvironmentOverrideColors: true,

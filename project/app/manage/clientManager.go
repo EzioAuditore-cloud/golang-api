@@ -1,9 +1,7 @@
 package manage
 
 import (
-	"context"
 	"fmt"
-	"io"
 
 	general "project/model/General.go"
 
@@ -32,6 +30,7 @@ func NewClient(conn *websocket.Conn, srv *Server, user general.UserClient) *Clie
 		Name:       user.Name,
 		SendBytes:  make(chan []byte),
 		RecvString: make(chan string),
+		RecvBytes:  make(chan []byte),
 		Srv:        srv,
 		State:      0,
 	}
@@ -47,6 +46,11 @@ func Login(conn *websocket.Conn, srv *Server, user general.UserClient) *Client {
 		client = v.(*Client)
 		client.Srv = srv
 	}
+	// if _, ok := srv.Clients[user.ID]; !ok {
+	// 	client = NewClient(conn, srv, user)
+	// 	srv.Clients[user.ID] = client
+	// }
+	srv.BroadCast(client, []byte("已上线"))
 	go client.ListenSend()
 	go client.SendMessage()
 	return client
@@ -54,8 +58,11 @@ func Login(conn *websocket.Conn, srv *Server, user general.UserClient) *Client {
 
 func (c *Client) ListenSend() {
 	for {
-		bytesMsg := <-c.RecvBytes
-		c.Conn.WriteMessage(websocket.TextMessage, bytesMsg)
+		select {
+		case bytesMsg := <-c.RecvBytes:
+			fmt.Println(bytesMsg)
+			c.Conn.WriteMessage(websocket.TextMessage, bytesMsg)
+		}
 	}
 }
 
@@ -75,31 +82,33 @@ func (c *Client) SendMessage() {
 			c.Conn.Close()
 			break
 		}
-		c.Srv.BroadcastChannel <- message
+		fmt.Println("Client SendMessage:", c.Srv.ID)
+		c.Srv.BroadCast(c, message)
+		// c.Srv.BroadcastChannel <- message
 	}
 }
 
-func (c *Client) DoMessage(ctx context.Context, isLive chan bool) {
-	srv := c.Srv
-	for {
-		select {
-		case <-ctx.Done():
-			c.Logout()
-			srv.BroadCast(c, []byte("已下线"))
-			srv.Clients.Delete(c.Addr)
-			return
-		default:
-			n, message, err := c.Conn.ReadMessage()
-			if err != nil && err != io.EOF {
-				fmt.Println("conn.Read to buf err:", err)
-				return
-			}
-			if n == 0 {
-				c.Logout()
-				return
-			}
-			srv.BroadCast(c, message)
-			isLive <- true
-		}
-	}
-}
+// func (c *Client) DoMessage(ctx context.Context, isLive chan bool) {
+// 	srv := c.Srv
+// 	for {
+// 		select {
+// 		case <-ctx.Done():
+// 			c.Logout()
+// 			srv.BroadCast(c, []byte("已下线"))
+// 			srv.Clients.Delete(c.Addr)
+// 			return
+// 		default:
+// 			n, message, err := c.Conn.ReadMessage()
+// 			if err != nil && err != io.EOF {
+// 				fmt.Println("conn.Read to buf err:", err)
+// 				return
+// 			}
+// 			if n == 0 {
+// 				c.Logout()
+// 				return
+// 			}
+// 			srv.BroadCast(c, message)
+// 			isLive <- true
+// 		}
+// 	}
+// }

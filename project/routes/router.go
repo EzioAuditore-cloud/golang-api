@@ -4,17 +4,21 @@ import (
 	"net/http"
 	"project/api"
 	_ "project/api"
-	"project/app/server"
+	"project/app/manage"
 	"project/middleWare/jwtMw"
 	"project/middleWare/logger"
 	general "project/model/General.go"
+
+	"github.com/gin-contrib/pprof"
 
 	"github.com/gin-gonic/gin"
 )
 
 func InnitRouter() *gin.Engine {
-	go server.ServerStart()
+	go manage.Srv.ListenMessage()
+	logger.StructLog("Info", "服务，启动！")
 	router := gin.Default()
+	pprof.Register(router, "debug/pprof")
 	router.Use(logger.LoggerHandler())
 	router.Use(jwtMw.JwtAuthHandler())
 	// router.GET("/users", Users)

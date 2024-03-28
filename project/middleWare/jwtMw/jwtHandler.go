@@ -21,8 +21,9 @@ type JwtClaims struct {
 }
 
 var skipPathMap = map[string]bool{
-	"/login":    true,
-	"/register": true,
+	"/login":       true,
+	"/register":    true,
+	"/debug/pprof": true,
 }
 
 var jwtConfig JwtConfig
