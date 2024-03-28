@@ -1,7 +1,7 @@
 package manage
 
 import (
-	"fmt"
+	"time"
 
 	general "project/model/General.go"
 
@@ -37,30 +37,13 @@ func NewClient(conn *websocket.Conn, srv *Server, user general.UserClient) *Clie
 	return client
 }
 
-func Login(conn *websocket.Conn, srv *Server, user general.UserClient) *Client {
-	var client *Client
-	if v, ok := srv.Clients.Load(user.ID); !ok {
-		client = NewClient(conn, srv, user)
-		srv.Clients.Store(user.ID, client)
-	} else {
-		client = v.(*Client)
-		client.Srv = srv
-	}
-	// if _, ok := srv.Clients[user.ID]; !ok {
-	// 	client = NewClient(conn, srv, user)
-	// 	srv.Clients[user.ID] = client
-	// }
-	srv.BroadCast(client, []byte("已上线"))
-	go client.ListenSend()
-	go client.SendMessage()
-	return client
-}
-
 func (c *Client) ListenSend() {
 	for {
 		select {
-		case bytesMsg := <-c.RecvBytes:
-			fmt.Println(bytesMsg)
+		case bytesMsg, ok := <-c.RecvBytes:
+			if !ok {
+				return
+			}
 			c.Conn.WriteMessage(websocket.TextMessage, bytesMsg)
 		}
 	}
@@ -68,47 +51,22 @@ func (c *Client) ListenSend() {
 
 func (c *Client) Logout() {
 	srv := c.Srv
-	srv.BroadCast(c, []byte("已下线"))
-	c.State = 1
+	srv.BroadCast(c, []byte(c.Name+"已下线"))
+	srv.Clients.Delete(c.ID)
 }
 
-func (c *Client) SendMessage() {
+func (c *Client) DoMessage() {
+	srv := c.Srv
 	defer func() {
 		c.Conn.Close()
 	}()
 	for {
-		_, message, err := c.Conn.ReadMessage()
-		if err != nil {
-			c.Conn.Close()
-			break
+		c.Conn.SetReadDeadline(time.Now().Add(time.Second * 10))
+		n, message, err := c.Conn.ReadMessage()
+		if n == 0 || err != nil {
+			c.Logout()
+			return
 		}
-		fmt.Println("Client SendMessage:", c.Srv.ID)
-		c.Srv.BroadCast(c, message)
-		// c.Srv.BroadcastChannel <- message
+		srv.BroadCast(c, message)
 	}
 }
-
-// func (c *Client) DoMessage(ctx context.Context, isLive chan bool) {
-// 	srv := c.Srv
-// 	for {
-// 		select {
-// 		case <-ctx.Done():
-// 			c.Logout()
-// 			srv.BroadCast(c, []byte("已下线"))
-// 			srv.Clients.Delete(c.Addr)
-// 			return
-// 		default:
-// 			n, message, err := c.Conn.ReadMessage()
-// 			if err != nil && err != io.EOF {
-// 				fmt.Println("conn.Read to buf err:", err)
-// 				return
-// 			}
-// 			if n == 0 {
-// 				c.Logout()
-// 				return
-// 			}
-// 			srv.BroadCast(c, message)
-// 			isLive <- true
-// 		}
-// 	}
-// }

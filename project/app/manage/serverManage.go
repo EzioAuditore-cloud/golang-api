@@ -1,7 +1,6 @@
 package manage
 
 import (
-	"fmt"
 	"project/middleWare/logger"
 	general "project/model/General.go"
 	"sync"
@@ -25,15 +24,14 @@ var Srv = &Server{
 
 //监听广播channel
 func (srv *Server) ListenMessage() {
-	// defer func() {
-	// 	p := recover()
-	// 	if p != nil {
-	// 		logger.StructLog("Error", "ListenMessage Err: %v", p)
-	// 		panic(p)
-	// 	}
-	// }()
+	defer func() {
+		p := recover()
+		if p != nil {
+			logger.StructLog("Error", "ListenMessage Err: %v", p)
+			panic(p)
+		}
+	}()
 	for {
-		fmt.Println("ListenMessage:", srv.ID)
 		msg := <-srv.BroadcastChannel
 		srv.Clients.Range(func(key, value any) bool {
 			cli := value.(*Client)
@@ -42,44 +40,7 @@ func (srv *Server) ListenMessage() {
 			}
 			return true
 		})
-		// for _, v := range srv.Clients {
-		// 	if v.State == 0 {
-		// 		v.RecvBytes <- msg
-		// 	}
-		// }
 	}
-}
-
-func (srv *Server) LoginSrv(conn *websocket.Conn, user general.UserClient) error {
-	// connAddr := ""
-	// conn, ok := peer.FromContext(ctx)
-	// if ok {
-	// 	connAddr = conn.Addr.String()
-	// }
-	// connAddr := conn.RemoteAddr().String()
-	// defer func() {
-	// 	e := recover()
-	// 	if e != nil {
-	// 		fmt.Println("panic: ", e)
-	// 	}
-	// 	fmt.Printf("%v连接断开\n", connAddr)
-	// }()
-	// client := Login(conn, srv, user)
-	// srv.BroadCast(client, []byte("已上线"))
-	// fmt.Printf("%v连接成功\n", client.ID)
-	// isLive := make(chan bool)
-	// ctx, cancel := context.WithCancel(context.Background())
-	// go func(context.Context) {
-	// 	client.DoMessage(ctx, isLive)
-	// }(ctx)
-	// for {
-	// 	select {
-	// 	case <-isLive:
-	// 	case <-time.After(time.Second * 100):
-	// 		cancel()
-	// 	}
-	// }
-	return nil
 }
 
 func (srv *Server) BroadCast(c *Client, msg []byte) {
@@ -89,49 +50,30 @@ func (srv *Server) BroadCast(c *Client, msg []byte) {
 }
 
 func (srv *Server) Handler(conn *websocket.Conn, user general.UserClient) {
-	client := Login(conn, srv, user)
-	// defer func() {
-	// 	e := recover()
-	// 	if e != nil {
-	// 		fmt.Println("panic: ", e)
-	// 	}
-	// 	conn.Close()
-	// 	fmt.Printf("%v连接断开\n", client.ID)
-	// }()
-
-	fmt.Printf("%v连接成功\n", client.ID)
-
-	// isLive := make(chan bool)
+	var client *Client
+	if v, ok := srv.Clients.Load(user.ID); !ok {
+		client = NewClient(conn, srv, user)
+		srv.Clients.Store(user.ID, client)
+	} else {
+		client = v.(*Client)
+		client.Srv = srv
+	}
+	srv.BroadCast(client, []byte(client.Name+"已上线"))
+	go client.ListenSend()
+	// isAlive := make(chan bool)
 	// ctx, cancel := context.WithCancel(context.Background())
-	// go func(context.Context) {
-	// 	for {
-	// 		select {
-	// 		case <-ctx.Done():
-	// 			client.Logout()
-	// 			srv.BroadCast(client, []byte("已下线"))
-	// 			srv.Clients.Delete(client.ID)
-	// 			return
-	// 		default:
-	// 			n, message, err := client.Conn.ReadMessage()
-	// 			if n == 0 {
-	// 				srv.BroadCast(client, []byte("已下线"))
-	// 				srv.Clients.Delete(client.ID)
-	// 				return
-	// 			}
-	// 			if err != nil && err != io.EOF {
-	// 				fmt.Println("conn.Read to buf err:", err)
-	// 				return
-	// 			}
-	// 			srv.BroadCast(client, message)
-	// 			isLive <- true
-	// 		}
-	// 	}
-	// }(ctx)
+	// wg := &sync.WaitGroup{}
+	// wg.Add(1)
+	go client.DoMessage()
 	// for {
 	// 	select {
-	// 	case <-isLive:
-	// 	case <-time.After(time.Second * 100):
+	// 	case <-isAlive:
+	// 		fmt.Println("Alive")
+	// 	case <-time.After(time.Second * 5):
+	// 		fmt.Println("Conn Time Out")
 	// 		cancel()
+	// 		wg.Wait()
+	// 		// time.Sleep(time.Millisecond * 100)
 	// 		return
 	// 	}
 	// }
