@@ -5,6 +5,7 @@ import (
 	"project/api"
 	_ "project/api"
 	"project/app/manage"
+	"project/config"
 	"project/middleWare/jwtMw"
 	"project/middleWare/logger"
 	general "project/model/General.go"
@@ -35,6 +36,6 @@ func InnitRouter() *gin.Engine {
 			"user": userClient,
 		})
 	})
-	router.Run(":8080")
+	router.Run(config.GlobleConf.ListenIPAndPort.Port)
 	return router
 }

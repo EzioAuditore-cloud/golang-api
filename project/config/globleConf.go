@@ -8,7 +8,13 @@ import (
 )
 
 type GlobleConfig struct {
-	JwtSecret string `yaml:"JwtSecret"`
+	ListenIPAndPort ListenIPAndPort `yaml:"ListenIPAndPort"`
+	JwtSecret       string          `yaml:"JwtSecret"`
+}
+
+type ListenIPAndPort struct {
+	IP   string `yaml:"IP"`
+	Port string `yaml:"Port"`
 }
 
 var GlobleConf GlobleConfig
