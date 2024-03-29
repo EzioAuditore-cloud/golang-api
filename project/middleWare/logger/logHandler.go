@@ -5,6 +5,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -22,6 +23,8 @@ type LogConfig struct {
 var logger = logrus.New()
 
 var logConfig LogConfig
+
+var FileLock sync.Mutex
 
 func init() {
 	configFile := "../middleWare/logger/config/log.yaml"
@@ -57,12 +60,14 @@ func StructLog(logLevel, format string, args ...interface{}) {
 			log.Println(p)
 		}
 		f.Close()
+		FileLock.Unlock()
 	}()
 	logger.SetFormatter(&logrus.TextFormatter{
 		// ForceColors:               true,
 		// EnvironmentOverrideColors: true,
 		TimestampFormat: logConfig.TimestampFormat,
 	})
+	FileLock.Lock()
 	writers := []io.Writer{f, os.Stdout}
 	outs := io.MultiWriter(writers...)
 	logger.SetOutput(outs)

@@ -44,9 +44,9 @@ func (srv *Server) ListenMessage() {
 }
 
 func (srv *Server) BroadCast(c *Client, msg []byte) {
-	sendMsg := "[" + c.Addr + "]" + c.UUID + ":" + string(msg)
+	sendMsg := "[" + c.Name + "]" + ":" + string(msg)
 	logger.StructLog("Info", "BroadCast:%v: %v", c.Addr, sendMsg)
-	srv.BroadcastChannel <- msg
+	srv.BroadcastChannel <- []byte(sendMsg)
 }
 
 func (srv *Server) Handler(conn *websocket.Conn, user general.UserClient) {
