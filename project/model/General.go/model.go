@@ -1,6 +1,8 @@
 package general
 
-import "time"
+import (
+	"time"
+)
 
 type UserClient struct {
 	ID   int

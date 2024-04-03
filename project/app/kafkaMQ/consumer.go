@@ -7,6 +7,7 @@ import (
 	"log"
 
 	"project/middleWare/logger"
+	dbModel "project/model/DbModel.go"
 	general "project/model/General.go"
 
 	"github.com/IBM/sarama"
@@ -18,12 +19,7 @@ func Consumer() {
 	if err != nil {
 		panic(err)
 	}
-	go func(sarama.ConsumerGroup) {
-		for {
-			err = client.Consume(context.Background(), []string{chatTopic}, &handler{})
-		}
-	}(client)
-
+	err = client.Consume(context.Background(), []string{chatTopic}, &handler{})
 }
 
 type handler struct{}
@@ -47,8 +43,15 @@ func (h *handler) ConsumeClaim(session sarama.ConsumerGroupSession, claim sarama
 			continue
 		}
 		log.Println(chatMsg)
-		// 自动提交
-		session.MarkMessage(msg, "")
+		chatRecord := dbModel.StructreChatMsgRecord(chatMsg)
+		id, err := chatRecord.InsertChatMsg()
+		if err != nil {
+			logger.StructLog("Error", "ConsumeClaim InsertChatMsg Error: %v", err)
+		} else {
+			logger.StructLog("Info", "InsertChatMsg To DB: %v", id)
+			// 标记后自动提交
+			session.MarkMessage(msg, "")
+		}
 	}
 	return nil
 }

@@ -75,9 +75,18 @@ func (c *Client) DoMessage() {
 			c.Logout()
 			return
 		}
-		data := general.StructreChatMsg(string(message), c.Name, c.ID, 0)
+		c.Conn.SetReadDeadline(time.Now().Add(time.Second * 100))
+		data := general.ChatMessage{}
+		err = json.Unmarshal(message, &data)
+		if err != nil {
+			logger.StructLog("Error", "Read ChatMessageData json.Marshal Error: %v", err)
+		}
 		if data.SendToID > 0 {
-			//TODO: 私聊
+			if val, ok := srv.Clients.Load(data.SendToID); ok {
+				toClient := val.(*Client)
+				toClient.RecvBytes <- data
+				data.State = 1
+			}
 		} else {
 			srv.BroadCast(c, data)
 		}
