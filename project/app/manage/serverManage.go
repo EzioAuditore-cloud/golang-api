@@ -12,14 +12,14 @@ type Server struct {
 	// Clients map[int]*Client
 	Clients sync.Map
 	//广播消息channel
-	BroadcastChannel chan []byte
+	BroadcastChannel chan general.ChatMessage
 	ID               int
 }
 
 var Srv = &Server{
 	ID: 111,
 	// Clients:          map[int]*Client{},
-	BroadcastChannel: make(chan []byte),
+	BroadcastChannel: make(chan general.ChatMessage),
 }
 
 //监听广播channel
@@ -43,10 +43,10 @@ func (srv *Server) ListenMessage() {
 	}
 }
 
-func (srv *Server) BroadCast(c *Client, msg []byte) {
-	sendMsg := "[" + c.Name + "]" + ":" + string(msg)
+func (srv *Server) BroadCast(c *Client, msg general.ChatMessage) {
+	sendMsg := msg
 	logger.StructLog("Info", "BroadCast:%v: %v", c.Addr, sendMsg)
-	srv.BroadcastChannel <- []byte(sendMsg)
+	srv.BroadcastChannel <- msg
 }
 
 func (srv *Server) Handler(conn *websocket.Conn, user general.UserClient) {
@@ -58,7 +58,8 @@ func (srv *Server) Handler(conn *websocket.Conn, user general.UserClient) {
 		client = v.(*Client)
 		client.Srv = srv
 	}
-	srv.BroadCast(client, []byte(client.Name+"已上线"))
+	msg := general.StructreChatMsg("已上线", client.Name, client.ID, 0)
+	srv.BroadCast(client, msg)
 	go client.ListenSend()
 	go client.DoMessage()
 }

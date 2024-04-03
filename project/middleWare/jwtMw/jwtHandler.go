@@ -12,7 +12,7 @@ import (
 )
 
 type JwtConfig struct {
-	Secret string `yaml: "Secret"`
+	Secret string `yaml:"Secret"`
 }
 
 type JwtClaims struct {
@@ -38,6 +38,7 @@ func init() {
 		logger.StructLog("Error", "Jwt config init Unmarshal err: %v", err)
 	}
 	logger.StructLog("Info", "log 配置成功！")
+
 }
 
 func JwtAuthHandler() gin.HandlerFunc {
@@ -52,7 +53,6 @@ func JwtAuthHandler() gin.HandlerFunc {
 			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"GetAuthorization Error": "Unauthorized"})
 			return
 		}
-		// logger.StructLog("Info", "tokenString: %s", tokenString)
 		token, err := jwt.ParseWithClaims(tokenString, &JwtClaims{}, func(t *jwt.Token) (interface{}, error) {
 			return []byte(jwtConfig.Secret), nil
 		})

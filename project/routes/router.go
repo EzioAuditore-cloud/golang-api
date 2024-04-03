@@ -1,9 +1,11 @@
 package router
 
 import (
+	"fmt"
 	"net/http"
 	"project/api"
 	_ "project/api"
+	"project/app/kafkaMQ"
 	"project/app/manage"
 	"project/config"
 	"project/middleWare/jwtMw"
@@ -17,6 +19,7 @@ import (
 
 func InnitRouter() *gin.Engine {
 	go manage.Srv.ListenMessage()
+	go kafkaMQ.Consumer()
 	logger.StructLog("Info", "服务，启动！")
 	router := gin.Default()
 	pprof.Register(router, "debug/pprof")
@@ -36,6 +39,7 @@ func InnitRouter() *gin.Engine {
 			"user": userClient,
 		})
 	})
+	fmt.Println("config.GlobleConf.ListenIPAndPort.Port", config.GlobleConf.ListenIPAndPort.Port)
 	router.Run(config.GlobleConf.ListenIPAndPort.Port)
 	return router
 }
