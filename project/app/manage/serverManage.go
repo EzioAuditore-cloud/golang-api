@@ -1,9 +1,12 @@
 package manage
 
 import (
+	"encoding/json"
+	"log"
 	"project/middleWare/logger"
 	general "project/model/General.go"
 	"sync"
+	"time"
 
 	"github.com/gorilla/websocket"
 )
@@ -58,8 +61,34 @@ func (srv *Server) Handler(conn *websocket.Conn, user general.UserClient) {
 		client = v.(*Client)
 		client.Srv = srv
 	}
+	log.Printf("用户量已达 %v ！", client.ID)
 	msg := general.StructreChatMsg("已上线", client.Name, client.ID, 0)
 	srv.BroadCast(client, msg)
 	go client.ListenSend()
 	go client.DoMessage()
+	/******Stress  Test******/
+	go func(*Client) {
+		msg := general.ChatMessage{
+			Content:  "Hello Hello Hello Hello Hello",
+			SendToID: 0,
+			FromID:   client.ID,
+			FromName: client.Name,
+		}
+		sendMsg, err := json.Marshal(msg)
+		if err != nil {
+			logger.StructLog("Error", "Marshal:%v: %v", client.ID, err)
+		}
+		count := 0
+		for {
+			time.Sleep(1 * time.Second)
+			err := client.Conn.WriteMessage(websocket.TextMessage, sendMsg)
+			if err != nil {
+				count++
+				logger.StructLog("Error", "WriteMessage:%v: %v", client.ID, err)
+			}
+			if count > 10 {
+				return
+			}
+		}
+	}(client)
 }

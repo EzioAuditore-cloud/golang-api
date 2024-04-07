@@ -2,6 +2,7 @@ package manage
 
 import (
 	"encoding/json"
+	"strconv"
 	"time"
 
 	"project/app/kafkaMQ"
@@ -51,14 +52,17 @@ func (c *Client) ListenSend() {
 			if err != nil {
 				logger.StructLog("Error", "ListenSend json.Marshal Error: %v", err)
 			}
-			c.Conn.WriteMessage(websocket.TextMessage, bytesMsg)
+			err = c.Conn.WriteMessage(websocket.TextMessage, bytesMsg)
+			if err != nil {
+				logger.StructLog("Error", "ListenSend WriteMessage Error: %v", err)
+			}
 		}
 	}
 }
 
-func (c *Client) Logout() {
+func (c *Client) Logout(reason int) {
 	srv := c.Srv
-	msg := general.StructreChatMsg("已下线", c.Name, c.ID, 0)
+	msg := general.StructreChatMsg("已下线, reason: "+strconv.Itoa(reason), c.Name, c.ID, 0)
 	srv.BroadCast(c, msg)
 	srv.Clients.Delete(c.ID)
 }
@@ -72,7 +76,8 @@ func (c *Client) DoMessage() {
 		c.Conn.SetReadDeadline(time.Now().Add(time.Second * 100))
 		n, message, err := c.Conn.ReadMessage()
 		if n == 0 || err != nil {
-			c.Logout()
+			logger.StructLog("Error", "Conn ReadMessage Error: %v", err)
+			c.Logout(1)
 			return
 		}
 		c.Conn.SetReadDeadline(time.Now().Add(time.Second * 100))
