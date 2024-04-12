@@ -43,6 +43,9 @@ func NewClient(conn *websocket.Conn, srv *Server, user general.UserClient) *Clie
 
 func (c *Client) ListenSend() {
 	for {
+		if c.State == 1 {
+			return
+		}
 		select {
 		case msg, ok := <-c.RecvBytes:
 			if !ok {
@@ -56,6 +59,7 @@ func (c *Client) ListenSend() {
 			if err != nil {
 				logger.StructLog("Error", "ListenSend WriteMessage Error: %v", err)
 			}
+			// logger.StructLog("Info", "%v收到%v说: %v", c.Name, msg.FromName, msg.Content)
 		}
 	}
 }
@@ -65,6 +69,7 @@ func (c *Client) Logout(reason int) {
 	msg := general.StructreChatMsg("已下线, reason: "+strconv.Itoa(reason), c.Name, c.ID, 0)
 	srv.BroadCast(c, msg)
 	srv.Clients.Delete(c.ID)
+	c.State = 1
 }
 
 func (c *Client) DoMessage() {

@@ -32,21 +32,25 @@ func main() {
 		// wg.Add(1)
 		go func(int) {
 			// defer wg.Done()
+			fmt.Printf("%v 连接\n", count)
 			t := LoginTest(count)
 			connServer(t)
-			fmt.Println("%v连接", count)
 		}(count)
-		time.Sleep(time.Second * 1)
+		time.Sleep(time.Millisecond * 500)
 		count++
+		// if count == 30 {
+		// 	break
+		// }
 		// wg.Wait()
-		return
+		// return
 	}
+	time.Sleep(time.Minute * 10)
 }
 
 func LoginTest(count int) string {
 	data := url.Values{}
 	data.Set("id", strconv.Itoa(count))
-	data.Set("name", "ezio"+strconv.Itoa(count))
+	data.Set("userName", "ezio"+strconv.Itoa(count))
 	url := "http://127.0.0.1:8080/login"
 	res, err := http.PostForm(url, data)
 	if err != nil {
@@ -61,7 +65,7 @@ func LoginTest(count int) string {
 	}
 	t := strings.Split(string(content), ":")[1]
 	t = t[1 : len(t)-2]
-	fmt.Println(t)
+	// fmt.Println(t)
 	return t
 }
 
