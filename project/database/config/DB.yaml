@@ -1,5 +1,5 @@
 mysql:
-  host: 127.0.0.1
+  host: chatDB
   port: 3306
   password: "123456"
 

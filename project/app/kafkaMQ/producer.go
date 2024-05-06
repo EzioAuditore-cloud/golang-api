@@ -2,6 +2,7 @@ package kafkaMQ
 
 import (
 	"fmt"
+	"os"
 	"project/middleWare/logger"
 	"time"
 
@@ -20,7 +21,8 @@ func ProducerConfig() *sarama.Config {
 func Producer(clientID int, byteData []byte) {
 	topic := chatTopic
 	config := ProducerConfig()
-	producer, err := sarama.NewSyncProducer([]string{"127.0.0.1:9092"}, config)
+	addrs := os.Getenv("KAFKA_BROKERS")
+	producer, err := sarama.NewSyncProducer([]string{addrs}, config)
 	if err != nil {
 		logger.StructLog("Error", "NewSyncProducer Error: %v", err)
 		return

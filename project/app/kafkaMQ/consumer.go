@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"os"
 
 	"project/middleWare/logger"
 	dbModel "project/model/DbModel.go"
@@ -15,7 +16,8 @@ import (
 
 func Consumer() {
 	config := sarama.NewConfig()
-	client, err := sarama.NewConsumerGroup([]string{"127.0.0.1:9092"}, chatTopic+"_group", config)
+	addrs := os.Getenv("KAFKA_BROKERS")
+	client, err := sarama.NewConsumerGroup([]string{addrs}, chatTopic+"_group", config)
 	if err != nil {
 		panic(err)
 	}

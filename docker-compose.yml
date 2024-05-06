@@ -1,0 +1,26 @@
+version: "3"
+services:
+  chat_server:
+    build: .
+    environment:
+      - MYSQL_HOST=chat_DB
+      - MYSQL_PORT=3306
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=123456
+      - MYSQL_DB=test
+      - KAFKA_BROKERS=chat_kafka:9092
+    depends_on:
+      - chat_kafka
+      - chat_DB
+  chat_DB:
+    image: mysql:latest
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: 123456
+      MYSQL_DATABASE: test
+    ports:
+      - "13306:3306"
+  chat_kafka:
+    image: wurstmeister/kafka:latest
+    ports:
+      - "9092:9092"

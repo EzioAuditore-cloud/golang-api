@@ -20,7 +20,7 @@ type ListenIPAndPort struct {
 var GlobleConf GlobleConfig
 
 func init() {
-	dataBytes, err := os.ReadFile("../config/globleConf.yaml")
+	dataBytes, err := os.ReadFile("./globleConf.yaml")
 	if err != nil {
 		logger.StructLog("Error", "Globle config init ReadFile err: %v", err)
 		panic(err)
